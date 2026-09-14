@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>开口 30 · 30天英语开口计划</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+  background:#eef2f7;color:#1a2233;overflow-x:hidden}
+.phone{width:100%;min-height:100vh;background:#f6f8fb;display:flex;flex-direction:column;position:relative}
+@media(min-width:521px){
+  body{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px}
+  .phone{width:414px;height:840px;min-height:0;border-radius:32px;overflow:hidden;
+    box-shadow:0 18px 60px rgba(20,40,80,.22);border:1px solid #d6dee9}
+}
+header{background:linear-gradient(135deg,#1f6feb,#12b3a8);color:#fff;padding:18px 18px 14px;flex-shrink:0}
+header .t{font-size:19px;font-weight:700;letter-spacing:.5px}
+header .s{font-size:12px;opacity:.9;margin-top:3px}
+.bar{height:6px;background:rgba(255,255,255,.3);border-radius:99px;margin-top:11px;overflow:hidden}
+.bar i{display:block;height:100%;background:#fff;border-radius:99px;transition:width .35s;width:0}
+.bar-txt{font-size:11px;opacity:.92;margin-top:6px;text-align:right}
+main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px 84px}
+.pane{display:none}.pane.on{display:block}
+nav{position:absolute;left:0;right:0;bottom:0;height:64px;background:#fff;display:flex;
+  border-top:1px solid #e3e9f2;box-shadow:0 -2px 12px rgba(20,40,80,.05)}
+nav a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;font-size:10.5px;color:#8695ab;text-decoration:none;cursor:pointer}
+nav a b{font-size:19px;font-weight:400;line-height:1}
+nav a.on{color:#1f6feb;font-weight:600}
+.card{background:#fff;border-radius:14px;padding:14px;margin-bottom:11px;box-shadow:0 2px 8px rgba(20,40,80,.055)}
+.card h3{font-size:15px;margin-bottom:9px;display:flex;align-items:center;gap:7px}
+.card h3 em{font-style:normal;font-size:11px;font-weight:600;padding:2px 7px;border-radius:99px;background:#eaf1fd;color:#1f6feb}
+.day-hero{background:linear-gradient(135deg,#1f6feb,#12b3a8);color:#fff;border-radius:16px;
+  padding:16px;margin-bottom:12px}
+.day-hero .k{font-size:11.5px;opacity:.88}
+.day-hero .n{font-size:27px;font-weight:700;margin:1px 0 4px}
+.day-hero .th{font-size:15px;font-weight:600;line-height:1.42}
+.task{background:#fff;border-radius:13px;padding:12px 13px;margin-bottom:9px;display:flex;gap:11px;
+  align-items:flex-start;box-shadow:0 2px 8px rgba(20,40,80,.05);cursor:pointer;transition:.15s}
+.task:active{transform:scale(.985)}
+.task.done{background:#f2fbf7}
+.chk{width:22px;height:22px;border-radius:7px;border:2px solid #c6d2e2;flex-shrink:0;margin-top:1px;
+  display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;font-weight:700}
+.task.done .chk{background:#12b3a8;border-color:#12b3a8}
+.task .bd{flex:1;min-width:0}
+.task .tt{font-size:13.5px;font-weight:600;display:flex;justify-content:space-between;gap:8px}
+.task .tt s{text-decoration:none;font-size:11px;color:#98a6bb;font-weight:500;flex-shrink:0}
+.task .ds{font-size:12px;color:#5d6b82;line-height:1.55;margin-top:4px;word-break:break-word}
+.task.done .tt{color:#0d8f86}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+.chip{font-size:11.5px;background:#f0f4fa;color:#33445c;padding:4px 9px;border-radius:99px;line-height:1.45}
+.cal{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.cd{aspect-ratio:1;border-radius:12px;background:#fff;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;font-size:12px;box-shadow:0 2px 7px rgba(20,40,80,.06);
+  cursor:pointer;border:2px solid transparent;position:relative}
+.cd .dn{font-size:16px;font-weight:700;color:#1f6feb}
+.cd .dt{font-size:9.5px;color:#93a1b8;margin-top:2px}
+.cd.full{background:#e6f8f4;border-color:#12b3a8}
+.cd.full .dn{color:#0d8f86}
+.cd.part{background:#fff8e8;border-color:#f0b429}
+.cd.today{border-color:#1f6feb;box-shadow:0 0 0 3px rgba(31,111,235,.14)}
+.cd.rest{background:#f2f4f8;opacity:.62}
+.wk{grid-column:1/-1;font-size:12px;font-weight:700;color:#8695ab;margin:15px 2px 8px;letter-spacing:.4px}
+.wk:first-child{margin-top:2px}
+.sg{margin-bottom:12px}
+.sg .st{font-size:12.5px;font-weight:700;color:#1f6feb;margin-bottom:6px}
+.en{background:#fff;border-radius:10px;padding:9px 11px;margin-bottom:6px;font-size:13px;
+  color:#22304a;line-height:1.5;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.en span{flex:1}
+.bt{font-size:10.5px;color:#1f6feb;background:#eaf1fd;border:0;border-radius:8px;padding:4px 8px;
+  cursor:pointer;flex-shrink:0;font-weight:600}
+.bt:active{background:#d8e6fc}
+.pm{background:#fff;border-radius:12px;padding:12px;margin-bottom:10px;box-shadow:0 2px 8px rgba(20,40,80,.05)}
+.pm .pt{font-size:13px;font-weight:700;margin-bottom:7px;display:flex;justify-content:space-between;align-items:center}
+.pm pre{font-size:11.8px;color:#41506a;white-space:pre-wrap;line-height:1.6;font-family:inherit;
+  background:#f7f9fc;border-radius:9px;padding:9px;margin:0}
+.rec{background:#fff;border-radius:12px;padding:12px;margin-bottom:9px;font-size:12.5px;line-height:1.6;
+  box-shadow:0 2px 8px rgba(20,40,80,.05)}
+.rec .rl{font-size:10.5px;color:#93a1b8;margin-bottom:4px}
+.rec .re{color:#0d8f86;font-weight:600}
+.inp{display:flex;gap:7px;margin-bottom:12px}
+.inp input{flex:1;border:1px solid #d9e2ee;border-radius:10px;padding:10px 12px;font-size:13px;
+  font-family:inherit;background:#fff;min-width:0}
+.inp button{background:#1f6feb;color:#fff;border:0;border-radius:10px;padding:0 16px;font-size:13px;
+  font-weight:600;font-family:inherit;cursor:pointer}
+.mi{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;
+  border-bottom:1px solid #eef2f7;font-size:13px}
+.mi:last-child{border-bottom:0}
+.mi .mp{font-size:10.5px;color:#93a1b8;margin-top:3px;word-break:break-all}
+.mini{font-size:11.5px;color:#5d6b82;line-height:1.62}
+.warn{background:#fff8e8;border-left:3px solid #f0b429;border-radius:9px;padding:10px 12px;
+  font-size:12px;color:#7a5b12;line-height:1.6;margin-bottom:11px}
+.ok{background:#eafaf6;border-left:3px solid #12b3a8;border-radius:9px;padding:10px 12px;
+  font-size:12px;color:#0a6e67;line-height:1.6;margin-bottom:11px}
+.stat{display:flex;gap:9px;margin-bottom:12px}
+.stat div{flex:1;background:#fff;border-radius:12px;padding:11px;text-align:center;box-shadow:0 2px 8px rgba(20,40,80,.05)}
+.stat b{display:block;font-size:20px;color:#1f6feb}
+.stat s{text-decoration:none;font-size:10.5px;color:#8695ab}
+.back{display:inline-flex;align-items:center;gap:5px;font-size:13px;color:#1f6feb;font-weight:600;
+  margin-bottom:11px;cursor:pointer}
+.toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%);background:rgba(26,34,51,.92);
+  color:#fff;font-size:12.5px;padding:9px 17px;border-radius:99px;opacity:0;pointer-events:none;transition:.25s;z-index:99}
+.toast.on{opacity:1}
+</style>
+</head>
+<body>
+<div class="phone">
+  <header>
+    <div class="t">开口 30 <span style="font-size:12px;font-weight:400;opacity:.85">· 30天英语开口计划</span></div>
+    <div class="s" id="hdrSub">Day 1 / 30 · 9/14 周一</div>
+    <div class="bar"><i id="hdrBar"></i></div>
+    <div class="bar-txt" id="hdrTxt">已完成 0 / 30 天</div>
+  </header>
+
+  <main id="main">
+    <!-- 今天 -->
+    <section class="pane on" id="p-today">
+      <div id="todayBox"></div>
+    </section>
+
+    <!-- 日历 -->
+    <section class="pane" id="p-cal">
+      <div class="stat">
+        <div><b id="s1">0</b><s>已完成天数</s></div>
+        <div><b id="s2">0</b><s>完成任务</s></div>
+        <div><b id="s3">0</b><s>卡壳记录</s></div>
+      </div>
+      <div class="mini" style="margin-bottom:12px">点任意一天看当天安排。绿=全部完成，黄=部分完成。</div>
+      <div id="calBox" class="cal"></div>
+    </section>
+
+    <!-- 材料 -->
+    <section class="pane" id="p-mat"></section>
+
+    <!-- 句型 -->
+    <section class="pane" id="p-pt"></section>
+
+    <!-- 记录 -->
+    <section class="pane" id="p-rec"></section>
+
+    <!-- 单日详情 -->
+    <section class="pane" id="p-detail"><div id="detailBox"></div></section>
+  </main>
+
+  <nav>
+    <a data-t="today" class="on"><b>▶️</b>今天</a>
+    <a data-t="cal"><b>📅</b>日历</a>
+    <a data-t="mat"><b>📚</b>材料</a>
+    <a data-t="pt"><b>💬</b>句型</a>
+    <a data-t="rec"><b>📝</b>记录</a>
+  </nav>
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+/* ============ 数据 ============ */
+const START = '2026-09-14';
+const WD = ['周日','周一','周二','周三','周四','周五','周六'];
+const NOTES = {'6':'⚠️ 政治课+开卷考（中文）→ 只做保底版 60 分钟','8':'9/22 19:00 参赛报名截止','15':'9/28 17:00 六级报名截止','17':'9/30 商务英语期末报告截止','21':'10/4 政治实践报告 23:59 截止'};
+const SELF = ['I work in…','My background is in…','I\u2019m based in…','I\u2019m currently doing…','My focus is on…','I\u2019ve been working in X for Y years','I\u2019m here because…','What I do is…'];
+const W1 = [
+ {d:1,md:'9/14',t:'自我介绍骨架',sh:'SAIC 讲稿·开场 60–90s',pr:1,out:'3 句版自我介绍：Who I am / What I do / Why here',
+  ch:['I work in…','My background is in…','I\u2019m based in Shanghai…','What I do is…','My focus is on…','I\u2019ve been in this field for…','I\u2019m here because…','Let me start with…']},
+ {d:2,md:'9/15',t:'我的工作：数据安全做什么',sh:'SAIC 讲稿·第 2 段 60–90s',pr:2,out:'60 秒讲清我的岗位',
+  ch:['I\u2019m responsible for…','Our team handles…','Day to day, I…','The main challenge is…','It involves a lot of…','What that means is…','For example…','So in short…']},
+ {d:3,md:'9/16',t:'我的背景：审计 → 数据安全',sh:'SAIC 讲稿·第 3 段 60–90s',pr:2,out:'60 秒转折故事',
+  ch:['I started as…','Then I moved into…','I made the switch because…','What I learned was…','Over time, I realized…','That gave me a different angle…','It wasn\u2019t a straight line…','Looking back…']},
+ {d:4,md:'9/17',t:'为什么读 MBA',sh:'SAIC 讲稿·第 4 段 60–90s',pr:2,out:'60 秒动机陈述',
+  ch:['I decided to…','The reason is…','I\u2019m hoping to…','What I\u2019m looking for is…','It\u2019s not just about…','Long term, I want to…','What I\u2019m missing is…','So for me it comes down to…']},
+ {d:5,md:'9/18',t:'我的公司和行业',sh:'SAIC 讲稿·第 5 段 60–90s',pr:3,out:'60 秒行业简介',
+  ch:['The company I work for…','We\u2019re in the business of…','The industry is changing fast…','What\u2019s interesting is…','Compared with five years ago…','The key driver is…','On the demand side…','That\u2019s the big shift…']},
+ {d:6,md:'9/19',t:'保底版（政治课+考试）',sh:'复习 W1 全部片段，只挑 1 段',pr:1,out:'60 秒自我介绍初稿',min:true,
+  ch:SELF.slice(0,8)},
+ {d:7,md:'9/20',t:'验收 1：无稿 60 秒',sh:'任意一段，只跟 3 遍',pr:5,out:'不看稿 60 秒自我介绍，卡壳 ≤3 次',
+  ch:SELF.slice(0,8)}
+];
+const W2 = [
+ {d:8,md:'9/21',t:'话题① 数据安全为什么是商业问题',sh:'Reading 3 · Hofstede 开头段',pr:1,out:'2 分钟独白（第 1 遍：先写 10 句）',
+  ch:['It\u2019s not just about IT…','From a business point of view…','The risk is…','What\u2019s at stake is…','A breach costs money and trust…','That\u2019s why it belongs on the management agenda…','In practice…','The bottom line is…']},
+ {d:9,md:'9/22',t:'话题① 加固（去掉稿子）',sh:'Reading 3 · 第 2 段',pr:2,out:'2 分钟独白（第 2 遍：只看关键词）',
+  ch:['Point…','The reason is…','For example…','So what it means is…','To put it simply…','That\u2019s my main point…','Does that make sense?','Let me rephrase that…']},
+ {d:10,md:'9/23',t:'话题② 合规：从成本变成资产',sh:'Reading 3 · 第 3 段',pr:1,out:'2 分钟独白（第 1 遍）',
+  ch:['It used to be seen as…','Now it\u2019s more like…','The shift is…','Companies that…','It pays off when…','In the long run…','On the other hand…','So compliance can be an asset…']},
+ {d:11,md:'9/24',t:'话题② 加固',sh:'Reading 3 · 第 4 段',pr:2,out:'2 分钟独白（第 2 遍：脱稿）',
+  ch:['I\u2019d argue that…','What strikes me is…','For instance…','The implication is…','That said…','By and large…','The way I see it…','Anyway, that\u2019s my take…']},
+ {d:12,md:'9/25',t:'话题③ AI 时代还需要审计吗',sh:'Reading 6 · Intercultural Conflict 开头',pr:1,out:'2 分钟独白（第 1 遍）',
+  ch:['AI changes what we do, not whether we do it…','The question isn\u2019t whether…','What matters is…','We still need to…','The difference is…','From my experience…','So the role shifts rather than disappears…','That\u2019s the key point…']},
+ {d:13,md:'9/26',t:'话题③ 加固',sh:'Reading 6 · 第 2 段',pr:2,out:'2 分钟独白（第 2 遍：脱稿）',
+  ch:['Let me give an example…','In my case…','What happened was…','The lesson was…','Since then…','So I\u2019d say…','To sum up…','That\u2019s where I stand…']},
+ {d:14,md:'9/27',t:'验收 2：2 分钟专业独白',sh:'任选一段，跟 3 遍热身',pr:5,out:'任选一题，2 分钟无稿',
+  ch:['Point…','The reason is…','For example…','So what it means is…','In other words…','That\u2019s my main point…','Any questions?','Does that make sense?']}
+];
+const W3 = [
+ {d:15,md:'9/28',t:'案例 A：SAIC-双龙英文复述',sh:'Reading 6 · Intercultural Conflict',pr:1,out:'90 秒案例复述',
+  ch:['The acquisition failed because…','What went wrong was…','On the surface it looked like…','But underneath…','The lesson is…','In terms of culture…','They assumed…','That\u2019s the classic mistake…']},
+ {d:16,md:'9/29',t:'案例 A：加观点',sh:'Reading 6 · 中段',pr:2,out:'90 秒复述 + 90 秒观点',
+  ch:['I\u2019d add that…','Building on that…','From a management angle…','What they missed was…','If I were them…','So the takeaway for me is…','That\u2019s why integration matters…','I think the real issue is…']},
+ {d:17,md:'9/30',t:'案例 B：美的-库卡 + 霍夫斯泰德',sh:'Reading 5 · Acquisition 开头',pr:1,out:'90 秒观点（用六维度）',
+  ch:['In terms of…','Compared with…','The dimension that stands out is…','High versus low…','That explains why…','On the individualism scale…','So the gap was…','That\u2019s what made it work…']},
+ {d:18,md:'10/1',t:'案例 B：加固 + 对比两案',sh:'Reading 5 · 第 2 段',pr:2,out:'2 分钟对比两个案例',
+  ch:['Both cases show…','The difference is…','One failed and one worked because…','On one hand…','On the other hand…','What they have in common is…','So the key variable is…','In short…']},
+ {d:19,md:'10/2',t:'提问训练：会问才有存在感',sh:'Reading 7 · Intercultural Leadership',pr:3,out:'写出并说出 3 个英文问题',
+  ch:['Could you elaborate on that?','What do you mean by…?','How does that work in practice?','Can you give me an example?','What\u2019s the implication for…?','May I ask a follow-up?','How would that apply to…?','What\u2019s your take on…?']},
+ {d:20,md:'10/3',t:'同意 / 反对的礼貌说法',sh:'Reading 7 · 第 2 段',pr:3,out:'90 秒"我有不同看法"',
+  ch:['That\u2019s a good point.','I\u2019d go even further…','I see it differently.','I\u2019m not sure I agree, because…','That may be true, but…','I\u2019d push back on that a little.','That\u2019s one way to look at it, but…','I partly agree, though…']},
+ {d:21,md:'10/4',t:'验收 3：完整英文问题',sh:'任选一段热身',pr:5,out:'说出 3 个完整、自然的英文问题',
+  ch:['Could you elaborate on that?','What do you mean by…?','How does that work in practice?','Can you give me an example?','What\u2019s the implication for…?','I\u2019d like to hear more about…','So are you saying that…?','Just to make sure I understand…']}
+];
+const W4 = [
+ {d:22,md:'10/5',t:'救场句：听不懂也不崩',sh:'Reading 6 · Intercultural Conflict',pr:4,out:'故意被快语速轰炸 30 分钟不崩',
+  ch:['Sorry, I didn\u2019t catch that.','Could you say that again, a bit slower?','I\u2019m not sure I follow — could you rephrase?','Could I come back to that?','That\u2019s a good question — let me think for a second.','How do you say… in English?','Do you mean…?','Let me make sure I got that right…']},
+ {d:23,md:'10/6',t:'接半句：听不懂也能参与',sh:'Reading 6 · 第 3 段',pr:4,out:'用"半句接话"参与 10 次',
+  ch:['Right, and…','So you mean…','That makes sense, and…','I think so too, especially…','Hmm, I\u2019m not sure about that part…','Can I add something?','Exactly — and what about…?','Fair enough.']},
+ {d:24,md:'10/7',t:'即兴训练（3 × 60 秒）',sh:'Reading 8 · Intercultural Teams',pr:1,out:'3 个随机题，各直说 60 秒，不准备',
+  ch:['Let me think out loud…','Off the top of my head…','Three things come to mind…','First… second… third…','The main thing is…','Honestly, I\u2019m not sure, but…','I\u2019d guess that…','That\u2019s roughly my view.']},
+ {d:25,md:'10/8',t:'即兴训练（加难度）',sh:'Reading 8 · 第 2 段',pr:2,out:'3 个随机题 + 每题被追问 2 次',
+  ch:['That\u2019s a fair point…','To be more specific…','It depends on…','On the one hand…','But if I had to choose…','I\u2019d say roughly…','So my answer would be…','Let me put it another way…']},
+ {d:26,md:'10/9',t:'全真模拟：被老师点名',sh:'Reading 8 · 第 3 段',pr:5,out:'模拟"Liu, what do you think?" 2 轮',
+  ch:['Thank you, professor.','That\u2019s an interesting question.','I\u2019d approach it from two sides…','From the data side…','From the business side…','So my view is…','I\u2019d be happy to hear other views.','That\u2019s my answer.']},
+ {d:27,md:'10/10',t:'全真模拟：被追问"为什么"',sh:'Reading 5 · Acquisition',pr:5,out:'连续扛住 3 次追问',
+  ch:['Because…','The main reason is…','For example…','That\u2019s based on my experience with…','Let me give you a concrete case…','So that\u2019s why I think…','If I may add one more thing…','Does that answer your question?']},
+ {d:28,md:'10/11',t:'模拟小组讨论：连说 3 轮',sh:'Reading 7 · 第 3 段',pr:6,out:'小组讨论录音，发言 ≥3 轮',
+  ch:['Can I jump in here?','Building on what he said…','I\u2019d like to add one thing…','Sorry to interrupt, but…','Let me come back to…','To wrap up my point…','Shall we move on?','Good discussion.']},
+ {d:29,md:'10/12',t:'回听对比 + 抽 50 句应急卡',sh:'Day1 录音 vs 今天录音',pr:7,out:'抽出 50 句"我真会用"的句子',
+  ch:['This is my go-to sentence…','I use this one a lot…','This covers most situations…','Let me practice it once more…','Almost there…','Good enough for now…','Same time tomorrow…','Thirty days, done.']},
+ {d:30,md:'10/13',t:'结业：3 分钟自由陈述',sh:'任选一段热身 5 分钟',pr:1,out:'自选题目，连续说 3 分钟不中断',
+  ch:['Let me start with a story…','Over the past month…','One thing I noticed is…','What changed for me is…','I\u2019m still not perfect, but…','Now I speak first, then fix it…','So here\u2019s my takeaway…','Thank you.']}
+];
+const DAYS = [].concat(W1,W2,W3,W4);
+DAYS.forEach(function(o){ o.dt = new Date(2026,8,14 + (o.d-1)); o.wd = WD[o.dt.getDay()]; });
+
+const PROMPTS = [
+ ['1｜通用陪练','Act as a friendly native-English classmate. Let\u2019s talk about <今天主题>. Ask me questions one at a time, keep your replies under 3 sentences, and let me speak 70% of the time. If I switch to Chinese, push me to say it in English.'],
+ ['2｜5 轮追问','Now ask me 5 follow-up questions about what I just said, one at a time. Use natural, slightly challenging questions a classmate would ask.'],
+ ['3｜只纠 3 个错','After each of my answers, correct only the 3 most important mistakes: one grammar, one word choice, one phrasing. Ignore small errors. Give me the corrected sentence.'],
+ ['4｜快语速轰炸','From now on, speak fast, use long sentences and some accent, and don\u2019t slow down. Don\u2019t help me. Just keep talking like a busy professor. I\u2019ll try to keep up.'],
+ ['5｜老师点名模拟','Act as a professor who suddenly calls on me: "Liu, what do you think about <话题>?" Then wait. After I answer, challenge me once with "Why?" and once with "Can you give an example?"'],
+ ['6｜小组讨论模拟','Simulate a 4-person group discussion about <话题>. You play 3 different classmates (one agrees, one disagrees, one stays quiet). I must speak at least 3 times. Interrupt me sometimes.'],
+ ['7｜复述质检','I just explained <话题> in 2 minutes. Now: (a) summarize what you understood, (b) tell me 2 points that were unclear, (c) ask me 3 questions to check if it made sense.']
+];
+
+const MATERIALS = [
+ ['跟读语料 A','你自己写的 SAIC 开场稿（最熟，起步最容易）','SAIC_SsangYong_开场市场_10min_v2_中英对照.docx｜本地 media 目录'],
+ ['跟读语料 B','BE 8 篇 Reading，按难度递进','media\\Reading_extracted\\Reading\\ 下 1–8'],
+ ['W2 用','Reading 3 · Hofstede\u2019s cultural dimensions','第 9–11 天'],
+ ['W3 用','Reading 6 · Intercultural Conflict','第 12–16 天'],
+ ['W4 用','Reading 5 / 7 / 8 · Acquisition · Leadership · Teams','第 17–29 天'],
+ ['案例口语弹药','SAIC 讲稿 + 中英对照 + PPT 问答稿','SAIC_SsangYong_30min_speech.docx｜SAIC_SsangYong_PPT_QnA.docx'],
+ ['AI 陪练','豆包 App 语音通话（最像真人）／DeepSeek／通义','开语音，粘贴"句型/材料"页的提示词'],
+ ['跟读音频','本机 edge-tts 可把你的材料做成"逐句＋留白"MP3','需要就找小刘生成'],
+ ['免费备用语料','BBC 6 Minute English（带文本+音频）｜VOA Learning English｜TED-Ed','bbc.co.uk/learningenglish'],
+ ['录音工具','手机自带录音 App','每天必录，这是唯一的进度尺'],
+ ['打卡与卡壳','就在这个 App 的「今天」和「记录」页','不用另找工具']
+];
+
+const GROUPS = [
+ ['① 提问',['Could you elaborate on that?','What do you mean by…?','How does that work in practice?','Can you give me an example?','What\u2019s the implication for…?']],
+ ['② 给观点',['From my perspective…','I\u2019d argue that…','It seems to me that…','What strikes me is…','I tend to think…']],
+ ['③ 同意 / 补充',['That\u2019s a good point.','I\u2019d add that…','Building on what you said…','Exactly, and…','I\u2019d go even further…']],
+ ['④ 不同意',['I see it differently.','I\u2019m not sure I agree, because…','That may be true, but…','I\u2019d push back on that a little.','That\u2019s one way to look at it, but…']],
+ ['⑤ 救场',['That\u2019s a good question — let me think for a second.','I\u2019m not sure I follow. Could you rephrase?','Sorry, I didn\u2019t catch that.','Could I come back to that?','How do you say… in English?']],
+ ['⑥ 接话 / 收尾',['Let me put it another way.','To put it simply…','So what I\u2019m saying is…','That\u2019s my main point.','Anyway, that\u2019s my take — does that make sense?']]
+];
+const CHUNKS = ['you know','I mean','basically','actually','to be honest','the thing is','at the end of the day','more or less','kind of','in terms of','as far as I know','if I remember correctly','roughly speaking','that said','having said that','on top of that','the bottom line is','in other words','by and large','the way I see it'];
+const SECTIONS = [
+ ['影子跟读','25 分钟'],
+ ['语块操练','20 分钟'],
+ ['AI 语音对话','50 分钟'],
+ ['录 1 分钟即兴','20 分钟'],
+ ['卡壳清单','5 分钟']
+];
+
+/* ============ 状态 ============ */
+const KEY='kai30';
+let ST = JSON.parse(localStorage.getItem(KEY)||'null');
+if(!ST) ST = {prog:{}, chunks:[], self:{}};
+ST.prog = ST.prog||{}; ST.chunks = ST.chunks||[]; ST.self = ST.self||{};
+function save(){ localStorage.setItem(KEY, JSON.stringify(ST)); }
+function todayN(){
+  const t=new Date(); t.setHours(0,0,0,0);
+  const s=new Date(2026,8,14);
+  const n=Math.floor((t-s)/86400000)+1;
+  return Math.max(1, Math.min(30, n));
+}
+function isToday(n){
+  const t=new Date(); t.setHours(0,0,0,0);
+  const d=new Date(2026,8,14+(n-1));
+  return t.getTime()===d.getTime();
+}
+function doneCount(n){ return (ST.prog[n]||[]).filter(Boolean).length; }
+function isFull(n){ return doneCount(n)===5; }
+function totalDays(){ let c=0; for(let i=1;i<=30;i++) if(isFull(i)) c++; return c; }
+function totalTasks(){ let c=0; for(let i=1;i<=30;i++) c+=doneCount(i); return c; }
+
+function toast(m){ const el=document.getElementById('toast'); el.textContent=m; el.classList.add('on'); setTimeout(()=>el.classList.remove('on'),1500); }
+function cp(txt){
+  const ta=document.createElement('textarea'); ta.value=txt; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); toast('已复制'); }catch(e){ toast('复制失败，请长按选择'); }
+  document.body.removeChild(ta);
+}
+
+/* ============ 顶栏 ============ */
+function head(){
+  const n=todayN(), d=DAYS[n-1];
+  document.getElementById('hdrSub').textContent = 'Day '+n+' / 30 · '+d.md+' '+d.wd+(n===1?' · 开始':'');
+  document.getElementById('hdrBar').style.width = (totalTasks()/150*100)+'%';
+  document.getElementById('hdrTxt').textContent = '已完成 '+totalDays()+' / 30 天';
+}
+
+/* ============ 今天 ============ */
+function renderToday(){
+  const n=todayN(), d=DAYS[n-1];
+  const note = NOTES[n] ? '<div class="warn">'+NOTES[n]+'</div>' : '';
+  const mins = d.min ? '保底版 60 分钟（今天只有 1 小时）' : '标准 120 分钟（可拆成早 60 + 晚 60）';
+  let h = '<div class="day-hero"><div class="k">'+(isToday(n)?'今天':'第 '+n+' 天')+'</div><div class="n">Day '+n+'</div><div class="th">'+d.t+'</div></div>';
+  h += note;
+  h += '<div class="ok">'+mins+'</div>';
+  const arr = ST.prog[n]||[];
+  SECTIONS.forEach(function(s,i){
+    const on = arr[i] ? ' done':'';
+    let ds='';
+    if(i===0) ds = '材料：'+d.sh+'｜顺序：盲听 1 遍 → 看稿跟 3 遍 → 脱稿跟 2 遍';
+    if(i===1) ds = d.ch.map(function(c){return '<span class="chip">'+c+'</span>';}).join('');
+    if(i===2) ds = '提示词 '+d.pr+'（去「材料」页复制）｜主题：'+d.t+'｜先自己说 2 分钟 → AI 追问 5 轮';
+    if(i===3) ds = '产出：'+d.out;
+    if(i===4) ds = '写下今天卡住的 3 个"想说但说不出"，明天第 2 段复练';
+    h += '<div class="task'+on+'" data-i="'+i+'"><div class="chk">'+(arr[i]?'✓':'')+'</div><div class="bd">'+
+         '<div class="tt"><span>'+s[0]+'</span><s>'+s[1]+'</s></div>'+
+         '<div class="ds">'+(i===1?'<div class="chips">'+ds+'</div>':ds)+'</div></div></div>';
+  });
+  h += '<div class="card"><h3>📌 今天完成后</h3><div class="mini">点上面 5 个方块打勾。全部打勾 = 这一天完成。<br>先去「记录」页写下卡壳的 3 条，再收工。</div></div>';
+  const box=document.getElementById('todayBox'); box.innerHTML=h;
+  box.querySelectorAll('.task').forEach(function(el){
+    el.onclick=function(){
+      const i=+el.dataset.i; if(!ST.prog[n]) ST.prog[n]=[false,false,false,false,false];
+      ST.prog[n][i]=!ST.prog[n][i]; save(); renderAll();
+      if(isFull(n)) toast('👏 Day '+n+' 完成！');
+    };
+  });
+}
+
+/* ============ 日历 ============ */
+function renderCal(){
+  document.getElementById('s1').textContent=totalDays();
+  document.getElementById('s2').textContent=totalTasks();
+  document.getElementById('s3').textContent=ST.chunks.length;
+  let h='', wk=0;
+  DAYS.forEach(function(d){
+    const w = d.d<=7?1:(d.d<=14?2:(d.d<=21?3:4));
+    if(w!==wk){ wk=w; h+='<div class="wk">第 '+w+' 周 · '+(w===1?'解锁嘴巴（自我相关）':w===2?'搭骨架（2 分钟专业独白）':w===3?'进课堂（提问与讨论）':'抗压（听不懂也不崩）')+'</div>'; }
+    const c=doneCount(d.d);
+    let cls = c===5?'full':(c>0?'part':'');
+    if(isToday(d.d)) cls+=' today';
+    h+='<div class="cd '+cls+'" data-d="'+d.d+'" title="'+d.t+'"><div class="dn">'+d.d+'</div><div class="dt">'+d.md+'</div></div>';
+  });
+  const box=document.getElementById('calBox'); box.innerHTML=h;
+  box.querySelectorAll('.cd').forEach(function(el){ el.onclick=function(){ openDay(+el.dataset.d); }; });
+  document.querySelectorAll('.cd').forEach(function(el){ el.title=DAYS[+el.dataset.d-1].t; });
+}
+
+/* ============ 单日详情 ============ */
+function openDay(n){
+  const d=DAYS[n-1];
+  const note = NOTES[n] ? '<div class="warn">'+NOTES[n]+'</div>':'';
+  let h='<div class="back" id="bk">‹ 返回</div>';
+  h+='<div class="day-hero"><div class="k">'+(isToday(n)?'今天':'第 '+n+' 天')+'</div><div class="n">Day '+n+'</div><div class="th">'+d.t+'</div><div class="k" style="margin-top:5px">'+d.md+' '+d.wd+'</div></div>';
+  h+=note;
+  h+='<div class="card"><h3>🎯 当天产出</h3><div class="mini">'+d.out+'</div></div>';
+  h+='<div class="card"><h3>🔊 影子跟读 25′</h3><div class="mini">'+d.sh+'<br>盲听 1 遍 → 看稿跟 3 遍 → 脱稿跟 2 遍（每句一停）</div></div>';
+  h+='<div class="card"><h3>🧱 语块操练 20′ <em>8 个</em></h3><div class="chips">'+d.ch.map(function(c){return '<span class="chip">'+c+'</span>';}).join('')+'</div><div class="mini" style="margin-top:8px">每个语块用你自己的工作和内容造 3 句，大声说出来。</div></div>';
+  h+='<div class="card"><h3>💬 AI 语音对话 50′</h3><div class="mini">用提示词 <b>'+d.pr+'</b>（「材料」页可一键复制）<br>主题：'+d.t+'<br>先自己说 2 分钟独白 → 再让 AI 追问 5 轮</div></div>';
+  h+='<div class="card"><h3>🎙️ 录 1 分钟即兴 20′</h3><div class="mini">不准备，直接说 60 秒，录音存档。</div></div>';
+  h+='<div class="card"><h3>📝 卡壳清单 5′</h3><div class="mini">去「记录」页写 3 条。</div></div>';
+  document.querySelectorAll('.pane').forEach(function(p){ p.classList.remove('on'); });
+  document.getElementById('p-detail').classList.add('on');
+  document.getElementById('detailBox').innerHTML=h;
+  document.getElementById('bk').onclick=function(){
+    document.getElementById('p-detail').classList.remove('on');
+    document.getElementById('p-today').classList.add('on'); renderAll();
+  };
+}
+
+/* ============ 材料 ============ */
+function renderMat(){
+  let h='<div class="card"><h3>📚 你要用的材料 <em>零采购</em></h3>';
+  MATERIALS.forEach(function(m){
+    h+='<div class="mi"><div><div>'+m[0]+'</div><div class="mp">'+m[1]+'</div><div class="mp">'+m[2]+'</div></div></div>';
+  });
+  h+='</div>';
+  h+='<div class="card"><h3>🤖 7 个 AI 陪练提示词</h3><div class="mini">点"复制"粘进豆包／DeepSeek。把 &lt;今天主题&gt; 换成当天的主题即可。</div></div>';
+  PROMPTS.forEach(function(p){
+    h+='<div class="pm"><div class="pt"><span>'+p[0]+'</span><button class="bt" data-c="'+encodeURIComponent(p[1])+'">复制</button></div><pre>'+p[1]+'</pre></div>';
+  });
+  h+='<div class="warn">第 4 天（快语速轰炸）和第五周的抗压练习，是专门练"听不懂也不崩"的——这是你真正的痛点。</div>';
+  const box=document.getElementById('p-mat'); box.innerHTML=h;
+  box.querySelectorAll('[data-c]').forEach(function(b){ b.onclick=function(){ cp(decodeURIComponent(b.dataset.c)); }; });
+}
+
+/* ============ 句型 ============ */
+function renderPt(){
+  let h='<div class="card"><h3>💬 30 个课堂句型</h3><div class="mini">分 6 组，每天轮 8 个。卡壳了就翻这里。</div></div>';
+  GROUPS.forEach(function(g){
+    h+='<div class="sg"><div class="st">'+g[0]+'</div>';
+    g[1].forEach(function(s){ h+='<div class="en"><span>'+s+'</span><button class="bt" data-c="'+encodeURIComponent(s)+'">复制</button></div>'; });
+    h+='</div>';
+  });
+  h+='<div class="card"><h3>🔗 20 个口语黏合剂</h3><div class="mini">说完短句后接一个，断续就变连贯。这 20 个比 200 个单词有用。</div><div class="chips" style="margin-top:9px">'+CHUNKS.map(function(c){return '<span class="chip">'+c+'</span>';}).join('')+'</div></div>';
+  const box=document.getElementById('p-pt'); box.innerHTML=h;
+  box.querySelectorAll('[data-c]').forEach(function(b){ b.onclick=function(){ cp(decodeURIComponent(b.dataset.c)); }; });
+}
+
+/* ============ 记录 ============ */
+function renderRec(){
+  const n=todayN();
+  let h='<div class="card"><h3>📝 卡壳清单 <em>'+ST.chunks.length+' 条</em></h3>';
+  h+='<div class="mini">记"我想说但说不出来"的中文，配上正确英文。30 天会收敛到 30 条以内——那 30 条就是你真缺的全部。</div>';
+  h+='<div class="inp" style="margin-top:10px"><input id="cZh" placeholder="我想说的中文（如：我们负责数据分级）"><input id="cEn" placeholder="英文说法" style="max-width:36%"></div>';
+  h+='<button class="bt" id="cAdd" style="width:100%;padding:10px;font-size:13px">＋ 记一条</button>';
+  h+='</div>';
+  if(ST.chunks.length){
+    const list=ST.chunks.slice().reverse();
+    h+='<div class="card"><h3>已记录</h3>';
+    list.forEach(function(c,i){
+      h+='<div class="rec"><div class="rl">'+c.date+'</div><div>'+c.zh+'</div><div class="re">'+c.en+'</div></div>';
+    });
+    h+='</div>';
+  }
+  const d=DAYS[n-1];
+  h+='<div class="card"><h3>⭐ 今天的录音自评 <em>1–5 分</em></h3><div class="mini">① 流利度（卡壳次数）② 结构（有没有 Point→Reason→Example→So what）③ 词汇缺口（卡壳新增几条）④ 救场（用没用上救场句）</div>';
+  h+='<div id="selfBox"></div></div>';
+  const box=document.getElementById('p-rec'); box.innerHTML=h;
+  document.getElementById('cAdd').onclick=function(){
+    const zh=document.getElementById('cZh').value.trim(), en=document.getElementById('cEn').value.trim();
+    if(!zh){ toast('先写中文'); return; }
+    const dd=new Date();
+    ST.chunks.push({zh:zh, en:en||'（待补）', date:(dd.getMonth()+1)+'/'+dd.getDate()});
+    save(); renderAll(); toast('已记录');
+  };
+  let sh='';
+  for(let i=1;i<=4;i++){
+    const v=ST.self[n+'_'+i]||0;
+    sh+='<div class="mi" style="justify-content:flex-start;gap:10px"><span style="flex:1;font-size:12.5px">'+['流利度','结构','词汇缺口','救场'][i-1]+'</span>';
+    for(let k=1;k<=5;k++) sh+='<span class="bt" data-s="'+i+'-'+k+'" style="'+(v===k?'background:#1f6feb;color:#fff':'')+'">'+k+'</span>';
+    sh+='</div>';
+  }
+  document.getElementById('selfBox').innerHTML=sh;
+  document.querySelectorAll('[data-s]').forEach(function(b){
+    b.onclick=function(){ const a=b.dataset.s.split('-'); ST.self[n+'_'+a[0]]=+a[1]; save(); renderRec(); };
+  });
+}
+
+/* ============ 启动 ============ */
+function renderAll(){ head(); renderToday(); renderCal(); renderRec(); }
+renderMat(); renderPt();
+renderAll();
+
+document.querySelectorAll('nav a').forEach(function(a){
+  a.onclick=function(){
+    document.querySelectorAll('nav a').forEach(function(x){ x.classList.remove('on'); });
+    a.classList.add('on');
+    document.querySelectorAll('.pane').forEach(function(p){ p.classList.remove('on'); });
+    document.getElementById('p-'+a.dataset.t).classList.add('on');
+    document.getElementById('main').scrollTop=0;
+    if(a.dataset.t==='cal') renderCal();
+    if(a.dataset.t==='rec') renderRec();
+  };
+});
+</script>
+</body>
+</html>
