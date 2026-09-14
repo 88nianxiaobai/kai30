@@ -91,6 +91,16 @@ nav a.on{color:#1f6feb;font-weight:600}
 .mrow .mt{font-size:13px;font-weight:600}
 .mrow .ms{font-size:10.5px;color:#93a1b8;margin-top:2px}
 .arw{color:#c2ccdb;font-size:16px;flex-shrink:0}
+.spk{font-size:12px;background:#eaf1fd;border:0;border-radius:8px;padding:4px 7px;cursor:pointer;flex-shrink:0;line-height:1.25;font-family:inherit;color:#1f6feb}
+.spk:active{background:#d0e2fc;transform:scale(.94)}
+.sent.cur{background:#fff9e6;border:1px solid #f0b429}
+.sent.cur .x{color:#7a5b12}
+.rate{display:flex;gap:6px;align-items:center;margin:0 0 9px;flex-wrap:wrap}
+.rate>b{font-size:11px;color:#8695ab;font-weight:600}
+.rb{font-size:11.5px;background:#f0f4fa;border:0;border-radius:8px;padding:5px 10px;cursor:pointer;font-family:inherit;color:#33445c}
+.rb.on{background:#1f6feb;color:#fff;font-weight:600}
+.rb.big{background:#1f6feb;color:#fff;font-weight:600;padding:6px 13px;font-size:12px}
+.rb.big.pause{background:#f0b429}
 </style>
 </head>
 <body>
@@ -560,17 +570,85 @@ function daySeg(n){return (SEGD[n]||[]);}
 function passOf(n){return ST.pass[n]||[false,false,false,false,false];}
 function segOf(n){return ST.seg[n]||[];}
 
+/* ================= 朗读（手机自带 TTS，无需复制出去） ================= */
+const TTS_OK = ('speechSynthesis' in window);
+let SAYBUF = [], VOICES = [], RATE = (ST.rate || 0.9), SPK_TOKEN = 0;
+function sayInit(){ SAYBUF = []; }
+function sayIdx(text){ SAYBUF.push(text); return SAYBUF.length - 1; }
+function sayBtn(text){ return '<button class="spk" data-sayidx="'+sayIdx(text)+'" title="朗读这句">🔊</button>'; }
+function loadVoices(){ try{ VOICES = speechSynthesis.getVoices() || []; }catch(e){ VOICES = []; } }
+if(TTS_OK){ loadVoices(); try{ speechSynthesis.onvoiceschanged = loadVoices; }catch(e){} }
+function enVoice(){
+  if(!VOICES.length) loadVoices();
+  if(!VOICES.length) return null;
+  const hit = function(re){ return VOICES.find(function(v){ return re.test(v.name); }); };
+  return hit(/Samantha|Aria|Jenny|Google US English|Zira|Microsoft Aria/i)
+      || VOICES.find(function(v){ return /^en[-_]US/i.test(v.lang); })
+      || VOICES.find(function(v){ return /^en[-_]GB/i.test(v.lang); })
+      || VOICES.find(function(v){ return /^en/i.test(v.lang); }) || null;
+}
+function speak(text, onEnd){
+  if(!TTS_OK || !text){ if(onEnd) onEnd(); return; }
+  const my = ++SPK_TOKEN;
+  try{ speechSynthesis.cancel(); }catch(e){}
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'en-US'; u.rate = RATE; u.pitch = 1;
+  const v = enVoice(); if(v) u.voice = v;
+  u.onend = function(){ if(my === SPK_TOKEN && onEnd) onEnd(); };
+  u.onerror = function(){ if(my === SPK_TOKEN && onEnd) onEnd(); };
+  try{ speechSynthesis.speak(u); }catch(e){ if(onEnd) onEnd(); }
+}
+/* 点任何 🔊 都走这里，避免触发父级卡片的打勾 */
+document.addEventListener('click', function(e){
+  const b = e.target && e.target.closest ? e.target.closest('[data-sayidx]') : null;
+  if(!b) return;
+  e.stopPropagation(); e.preventDefault();
+  stopPlay(); speak(SAYBUF[+b.dataset.sayidx]);
+}, true);
+
+/* ================= 整段连播（跟读用，句间自动留白） ================= */
+let PLAY_ON = false, PLAY_I = -1;
+function hlSent(i){
+  document.querySelectorAll('.sent').forEach(function(el){ el.classList.remove('cur'); });
+  if(i < 0) return;
+  const el = document.querySelector('.sent[data-s="'+i+'"]');
+  if(el){ el.classList.add('cur'); try{ el.scrollIntoView({block:'center',behavior:'smooth'}); }catch(e){} }
+}
+function updPlayBtn(){
+  const b = document.getElementById('playAll');
+  if(b){ b.textContent = PLAY_ON ? '⏸ 暂停' : '▶ 整段连播'; b.className = 'rb big' + (PLAY_ON ? ' pause' : ''); }
+}
+function stopPlay(){
+  PLAY_ON = false; PLAY_I = -1; SPK_TOKEN++;
+  if(TTS_OK){ try{ speechSynthesis.cancel(); }catch(e){} }
+  hlSent(-1); updPlayBtn();
+}
+function playNext(sents){
+  if(!PLAY_ON) return;
+  if(PLAY_I >= sents.length){ stopPlay(); toast('跟读结束 ✓'); return; }
+  hlSent(PLAY_I);
+  speak(sents[PLAY_I], function(){
+    PLAY_I++;
+    setTimeout(function(){ playNext(sents); }, 300);   // 300ms 留白，方便跟读
+  });
+}
+function startPlay(sents){
+  if(!TTS_OK){ toast('这个浏览器不支持朗读'); return; }
+  if(PLAY_ON){ stopPlay(); return; }
+  PLAY_ON = true; PLAY_I = 0; updPlayBtn(); playNext(sents);
+}
+
 /* ================= 路由（修复返回键） ================= */
 const HK='kai30nav';
 let CUR={v:'tab',t:'today'};
 function push(s){s.k=Date.now();history.pushState(s,'','');CUR=s;paint(s);}
-function paint(s){ if(s.v==='tab'){showTab(s.t,false);} else if(s.v==='day'){renderDay(s.n,false);} else if(s.v==='shadow'){renderShadow(s.n,false);} else if(s.v==='read'){renderRead(s.m,false);} }
-function showTab(t,doPush){ if(doPush){push({v:'tab',t:t});return;} CUR={v:'tab',t:t};
+function paint(s){ stopPlay(); if(s.v==='tab'){showTab(s.t,false);} else if(s.v==='day'){renderDay(s.n,false);} else if(s.v==='shadow'){renderShadow(s.n,false);} else if(s.v==='read'){renderRead(s.m,false);} }
+function showTab(t,doPush){ if(doPush){push({v:'tab',t:t});return;} stopPlay(); CUR={v:'tab',t:t};
   document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('on',a.dataset.t===t));
   document.querySelectorAll('.pane').forEach(p=>p.classList.remove('on'));
   document.getElementById('p-'+t).classList.add('on');
   document.getElementById('main').scrollTop=0;
-  if(t==='cal')renderCal(); if(t==='rec')renderRec(); if(t==='mat')renderMat(); if(t==='pt')renderPt(); }
+  if(t==='today')renderToday(); if(t==='cal')renderCal(); if(t==='rec')renderRec(); if(t==='mat')renderMat(); if(t==='pt')renderPt(); }
 function openDay(n){push({v:'day',n:n});}
 function openShadow(n){push({v:'shadow',n:n});}
 function openRead(m){push({v:'read',m:m});}
@@ -594,6 +672,7 @@ function head(){const n=todayN();document.getElementById('hdrSub').textContent='
 /* ================= 今天 ================= */
 function renderToday(){
  const n=todayN();const d=DAYS[n-1];const arr=ST.prog[n]||[];
+ sayInit();
  let h='<div class="hero"><div class="k">'+(isToday(n)?'今天':'第 '+n+' 天')+'</div><div class="n">Day '+n+'</div><div class="th">'+E(d.t)+'</div><div class="k" style="margin-top:5px">'+d.md+' '+WD[dOfDay(n).getDay()]+'</div></div>';
  if(NOTES[n])h+='<div class="warn">'+NOTES[n]+'</div>';
  h+='<div class="ok">'+(d.min?'今天只有 1 小时 → 走保底版：跟读 25′ + AI 对话 30′ + 卡壳 5′':'标准 120 分钟，可拆成早 60′ + 晚 60′')+'</div>';
@@ -607,13 +686,13 @@ function renderToday(){
   h+='<div class="task'+on+'" data-i="'+i+'"><div class="chk">'+(arr[i]?'✓':'')+'</div><div class="bd"><div class="tt"><span>'+s[0]+'</span><s>'+s[1]+'</s></div><div class="ds">'+(i===1?'<div class="chips">'+ds+'</div>':ds)+'</div><div class="go">'+go+'</div></div></div>';
  });
  h+='<div class="card"><h3>🎯 今天的产出</h3><div class="mini">'+E(d.out)+'</div></div>';
- h+='<div class="card"><h3>💬 今天可以直接念的第一句 <em>给 AI</em></h3><div class="mini" style="margin-bottom:7px">先把这句念给豆包/DeepSeek，它就会进入陪练模式：</div><div class="pm" style="box-shadow:none;border:1px solid #eef2f7"><pre>'+E(d.ask)+'</pre><button class="bt" data-cp="'+encodeURIComponent(d.ask)+'" style="margin-top:7px">复制开场句</button></div></div>';
- h+='<div class="card"><h3>⚡ 今天可能卡壳的两句 <em>先背</em></h3>'+d.traps.map(function(t){return '<div class="rec" style="box-shadow:none;border:1px solid #eef2f7"><div class="rl">'+E(t[0])+'</div><div class="re">'+E(t[1])+'</div></div>';}).join('')+'</div>';
+ h+='<div class="card"><h3>💬 今天可以直接念的第一句 <em>给 AI</em></h3><div class="mini" style="margin-bottom:7px">先把这句念给豆包/DeepSeek，它就会进入陪练模式：</div><div class="pm" style="box-shadow:none;border:1px solid #eef2f7"><pre>'+E(d.ask)+'</pre><div class="rate" style="margin:8px 0 0"><button class="bt" data-cp="'+encodeURIComponent(d.ask)+'">复制开场句</button>'+sayBtn(d.ask)+'</div></div></div>';
+ h+='<div class="card"><h3>⚡ 今天可能卡壳的两句 <em>先背</em></h3>'+d.traps.map(function(t){return '<div class="rec" style="box-shadow:none;border:1px solid #eef2f7"><div class="rl">'+E(t[0])+'</div><div style="display:flex;gap:8px;align-items:center;justify-content:space-between"><div class="re">'+E(t[1])+'</div>'+sayBtn(t[1])+'</div></div>';}).join('')+'</div>';
  const box=document.getElementById('todayBox');box.innerHTML=h;
  box.querySelectorAll('.task').forEach(function(el){
   el.onclick=function(ev){
    const i=+el.dataset.i;
-   if(ev.target.classList.contains('chip')){const id=ev.target.dataset.c;const c=CL[id];if(c){toast(c.en+' — '+(c.zh||''));}return;}
+   if(ev.target.classList.contains('chip')){const id=ev.target.dataset.c;const c=CL[id];if(c){stopPlay();speak(c.en);toast(c.en+' — '+(c.zh||''));}return;}
    const d2=DAYS[n-1];
    if(i===0){openShadow(n);return;}
    if(i===1){showTab('pt',true);return;}
@@ -651,16 +730,17 @@ function renderDay(n,doPush){
  document.getElementById('p-detail').classList.add('on');
  document.getElementById('main').scrollTop=0;
  const d=DAYS[n-1];const arr=ST.prog[n]||[];
+ sayInit();
  let h='<div class="back" data-bk>‹ 返回</div>';
  h+='<div class="hero"><div class="k">'+(isToday(n)?'今天':'第 '+n+' 天')+'</div><div class="n">Day '+n+'</div><div class="th">'+E(d.t)+'</div><div class="k" style="margin-top:5px">'+d.md+' '+WD[dOfDay(n).getDay()]+'</div></div>';
  if(NOTES[n])h+='<div class="warn">'+NOTES[n]+'</div>';
  h+='<div class="card"><h3>🎯 当天产出</h3><div class="mini">'+E(d.out)+'</div></div>';
  h+='<div class="card"><h3>🔊 影子跟读 25′ <em>点开跟读器</em></h3><div class="mini">材料：'+E(matOf(d.mat).t)+' · 第 '+d.seg+' 段<br>盲听 1 遍 → 看稿跟 3 遍 → 脱稿跟 2 遍</div><div class="chips" style="margin-top:8px"><span class="chip" data-open="shadow">打开跟读器 →</span><span class="chip" data-open="read">看全文 →</span></div></div>';
  h+='<div class="card"><h3>🧱 语块操练 20′ <em>'+d.ch.length+' 个</em></h3>';
- d.ch.forEach(function(id){const c=CL[id]||{en:id,zh:''};h+='<div class="rec" style="box-shadow:none;border:1px solid #eef2f7"><div class="rl">'+E(c.zh||'')+'</div><div style="font-weight:600">'+E(c.en)+'</div>'+(c.ex?'<div class="mini" style="margin-top:3px">'+E(c.ex)+'</div>':'')+'</div>';});
- h+='<div class="mini" style="margin-top:5px">每个语块用你自己的工作造 3 句，大声说。</div></div>';
- h+='<div class="card"><h3>💬 AI 语音对话 50′ <em>提示词 '+d.pr+'</em></h3><div class="mini" style="margin-bottom:7px">开场第一句（直接念）：</div><div class="pm" style="box-shadow:none;border:1px solid #eef2f7"><pre>'+E(d.ask)+'</pre><button class="bt" data-cp="'+encodeURIComponent(d.ask)+'" style="margin-top:7px">复制</button></div><div class="mini" style="margin-top:7px">提示词全文在「材料」页，点进去复制。</div></div>';
- h+='<div class="card"><h3>⚡ 今天可能卡壳</h3>'+d.traps.map(function(t){return '<div class="rec" style="box-shadow:none;border:1px solid #eef2f7"><div class="rl">'+E(t[0])+'</div><div class="re">'+E(t[1])+'</div></div>';}).join('')+'</div>';
+ d.ch.forEach(function(id){const c=CL[id]||{en:id,zh:''};h+='<div class="rec" style="box-shadow:none;border:1px solid #eef2f7"><div class="rl">'+E(c.zh||'')+'</div><div style="display:flex;gap:8px;align-items:center;justify-content:space-between"><div style="font-weight:600">'+E(c.en)+'</div>'+sayBtn(c.en)+'</div>'+(c.ex?'<div class="mini" style="margin-top:3px">'+E(c.ex)+'</div>':'')+'</div>';});
+ h+='<div class="mini" style="margin-top:5px">每个语块用你自己的工作造 3 句，大声说。点 🔊 听标准读音。</div></div>';
+ h+='<div class="card"><h3>💬 AI 语音对话 50′ <em>提示词 '+d.pr+'</em></h3><div class="mini" style="margin-bottom:7px">开场第一句（直接念）：</div><div class="pm" style="box-shadow:none;border:1px solid #eef2f7"><pre>'+E(d.ask)+'</pre><div class="rate" style="margin:8px 0 0"><button class="bt" data-cp="'+encodeURIComponent(d.ask)+'">复制</button>'+sayBtn(d.ask)+'</div></div><div class="mini" style="margin-top:7px">提示词全文在「材料」页，点进去复制。</div></div>';
+ h+='<div class="card"><h3>⚡ 今天可能卡壳 <em>点 🔊 听</em></h3>'+d.traps.map(function(t){return '<div class="rec" style="box-shadow:none;border:1px solid #eef2f7"><div class="rl">'+E(t[0])+'</div><div style="display:flex;gap:8px;align-items:center;justify-content:space-between"><div class="re">'+E(t[1])+'</div>'+sayBtn(t[1])+'</div></div>';}).join('')+'</div>';
  h+='<div class="card"><h3>🎙️ 即兴题 <em>不准备直接说 60 秒</em></h3>'+d.improv.map(function(q){return '<div class="rec" style="box-shadow:none;border:1px solid #eef2f7">'+E(q)+'</div>';}).join('')+'</div>';
  h+='<div class="card"><h3>✅ 完成情况</h3>';
  SECTIONS.forEach(function(s,i){const on=arr[i]?' done':'';h+='<div class="task'+on+'" data-i="'+i+'" style="margin-bottom:6px"><div class="chk">'+(arr[i]?'✓':'')+'</div><div class="bd"><div class="tt"><span>'+s[0]+'</span><s>'+s[1]+'</s></div></div></div>';});
@@ -679,16 +759,21 @@ function renderShadow(n,doPush){
  document.getElementById('p-detail').classList.add('on');
  document.getElementById('main').scrollTop=0;
  const d=DAYS[n-1];const sents=daySeg(n);const done=segOf(n);const pass=passOf(n);
+ sayInit();
  let h='<div class="back" data-bk>‹ 返回</div>';
  h+='<div class="hero"><div class="k">Day '+n+' · 影子跟读</div><div class="n">'+sents.length+' 句</div><div class="th">'+E(matOf(d.mat).t)+' · 第 '+d.seg+' 段</div></div>';
  h+='<div class="card"><h3>📋 5 遍法 <em>照着做</em></h3><div class="steps">';
  ['盲听 1 遍：只听不跟，抓大意','看文本跟 3 遍：一句一停，跟着念','看文本跟，不停顿、连续跟','不看文本跟：卡了就哼过去','不看文本跟：同速度同语调，录下来'].forEach(function(t,i){
   h+='<div class="step'+(pass[i]?' done':'')+'" data-p="'+i+'"><div class="ck">'+(pass[i]?'✓':'')+'</div><div>'+t+'</div></div>';});
  h+='</div><div class="mini" style="margin-top:6px">跟读时别想语法，只追声音。念不顺就先慢半拍。</div></div>';
- h+='<div class="card"><h3>📖 跟读原文 <em>点一句标一句</em></h3>';
+ h+='<div class="card"><h3>📖 跟读原文 <em>点 🔊 听，点句子打勾</em></h3>';
+ h+='<div class="rate"><button class="rb big" id="playAll">▶ 整段连播</button><b>语速</b>';
+ [0.7,0.85,1.0,1.15].forEach(function(r){h+='<button class="rb rbtn'+(Math.abs(RATE-r)<0.01?' on':'')+'" data-r="'+r+'">'+r+'×</button>';});
+ h+='</div>';
  if(!sents.length){h+='<div class="mini">这一段没抽到文本，请点「看全文」。</div>';}
- sents.forEach(function(s,i){h+='<div class="sent'+(done[i]?' done':'')+'" data-s="'+i+'"><div class="n">'+(i+1)+'</div><div class="x">'+E(s)+'</div></div>';});
- h+='<div class="mini" style="margin-top:6px">已跟 '+done.filter(Boolean).length+' / '+sents.length+' 句</div></div>';
+ sents.forEach(function(s,i){h+='<div class="sent'+(done[i]?' done':'')+'" data-s="'+i+'"><div class="n">'+(i+1)+'</div><div class="x">'+E(s)+'</div>'+sayBtn(s)+'</div>';});
+ h+='<div class="mini" style="margin-top:6px">已跟 '+done.filter(Boolean).length+' / '+sents.length+' 句</div>';
+ h+='<div class="mini" style="margin-top:5px">🔈 没声音？① iPhone 侧边静音键拨到静音会没声 ② 用音量键调大「媒体」音量 ③ 连播每句之间自动停 0.3 秒，正好跟着念</div></div>';
  h+='<div class="card"><h3>🔗 这一段能用上的说法</h3><div class="chips">'+d.ch.map(function(id){return '<span class="chip">'+E((CL[id]||{}).en||id)+'</span>';}).join('')+'</div><div class="mini" style="margin-top:6px">在跟读时留意它们在原文里怎么用。</div></div>';
  h+='<div class="card"><h3>➕ 补充</h3><div class="chips"><span class="chip" data-open="read">看这篇全文 →</span><span class="chip" data-cp="'+encodeURIComponent(sents.join(' '))+'" id="cpAll">复制整段（方便打印）</span></div></div>';
  const box=document.getElementById('detailBox');box.innerHTML=h;
@@ -697,6 +782,10 @@ function renderShadow(n,doPush){
  box.querySelectorAll('.sent').forEach(function(el){el.onclick=function(){const i=+el.dataset.s;if(!ST.seg[n])ST.seg[n]=[];ST.seg[n][i]=!ST.seg[n][i];save();renderShadow(n,false);};});
  box.querySelectorAll('[data-open]').forEach(function(el){el.onclick=function(){openRead(d.mat);};});
  const cpa=document.getElementById('cpAll');if(cpa)cpa.onclick=function(){cp(sents.join(' '));};
+ const pa=document.getElementById('playAll');if(pa)pa.onclick=function(e){e.stopPropagation();startPlay(sents);};
+ box.querySelectorAll('.rbtn').forEach(function(el){el.onclick=function(e){e.stopPropagation();RATE=parseFloat(el.dataset.r);ST.rate=RATE;save();renderShadow(n,false);};});
+ if(PLAY_ON)hlSent(PLAY_I);
+ updPlayBtn();
 }
 
 /* ================= 全文阅读器 ================= */
@@ -706,13 +795,16 @@ function renderRead(m,doPush){
  document.getElementById('p-detail').classList.add('on');
  document.getElementById('main').scrollTop=0;
  const info=matOf(m);const txt=(FULL[m]&&FULL[m].text)||'（没抽到文本）';
+ sayInit();
  let h='<div class="back" data-bk>‹ 返回</div>';
  h+='<div class="hero"><div class="k">材料全文</div><div class="th">'+E(info.t)+'</div><div class="k" style="margin-top:4px">'+E(info.sub||'')+'</div></div>';
- h+='<div class="card"><div class="chips"><span class="chip" data-cp="'+encodeURIComponent(txt)+'">复制全文</span></div></div>';
- h+='<div class="rd">'+E(txt).split('\n\n').map(function(p){return '<p style="margin:0 0 9px">'+p.replace(/\n/g,'<br>')+'</p>';}).join('')+'</div>';
+ h+='<div class="card"><div class="chips"><span class="chip" data-cp="'+encodeURIComponent(txt)+'">复制全文</span></div><div class="mini" style="margin-top:7px">每段右侧 🔊 可以听这一段。整篇很长，建议只精听你当天要跟读的那一段。</div></div>';
+ txt.split('\n\n').forEach(function(p){
+   h+='<div class="rd" style="margin-bottom:8px;display:flex;gap:9px;align-items:flex-start"><div style="flex:1">'+E(p).replace(/\n/g,' ') +'</div>'+sayBtn(p.replace(/\s+/g,' '))+'</div>';
+ });
  const box=document.getElementById('detailBox');box.innerHTML=h;
  box.querySelector('[data-bk]').onclick=goBack;
- box.querySelectorAll('[data-cp]').forEach(function(b){b.onclick=function(){cp(decodeURIComponent(b.dataset.cp));};});
+ box.querySelectorAll('[data-cp]').forEach(function(b){b.onclick=function(ev){if(ev.target.classList.contains('spk'))return;cp(decodeURIComponent(b.dataset.cp));};});
 }
 
 /* ================= 材料 ================= */
@@ -737,9 +829,10 @@ function renderMat(){
 
 /* ================= 语块 ================= */
 function renderPt(){
- let h='<div class="card"><h3>🧱 语块库 <em>'+Object.keys(CL).length+' 条</em></h3><div class="mini">每条都有中文和例句。点一下复制英文。</div><div class="inp" style="margin-top:9px"><input id="q" placeholder="搜中文或英文…"></div><div id="clBox"></div></div>';
+ sayInit();
+ let h='<div class="card"><h3>🧱 语块库 <em>'+Object.keys(CL).length+' 条</em></h3><div class="mini">每条都有中文和例句。点 🔵🔊 听读音，点整条复制英文。</div><div class="inp" style="margin-top:9px"><input id="q" placeholder="搜中文或英文…"></div><div id="clBox"></div></div>';
  h+='<div class="card"><h3>💬 30 个课堂句型</h3>';
- GROUPS.forEach(function(g){h+='<div class="sg"><div class="st">'+g[0]+'</div>'+g[1].map(function(s){return '<div class="en"><span>'+E(s)+'</span><button class="bt" data-cp="'+encodeURIComponent(s)+'">复制</button></div>';}).join('')+'</div>';});
+ GROUPS.forEach(function(g){h+='<div class="sg"><div class="st">'+g[0]+'</div>'+g[1].map(function(s){return '<div class="en"><span>'+E(s)+'</span><button class="bt" data-cp="'+encodeURIComponent(s)+'">复制</button>'+sayBtn(s)+'</div>';}).join('')+'</div>';});
  h+='</div>';
  h+='<div class="card"><h3>🔗 20 个口语黏合剂</h3><div class="mini">说完短句接一个，断续就变连贯。</div><div class="chips" style="margin-top:8px">'+CHUNKS20.map(function(c){return '<span class="chip">'+c+'</span>';}).join('')+'</div></div>';
  const box=document.getElementById('ptBox');box.innerHTML=h;
@@ -748,12 +841,12 @@ function renderPt(){
   Object.keys(CL).forEach(function(k){const c=CL[k];
    const hay=(c.en+' '+c.zh+' '+(c.ex||'')).toLowerCase();
    if(q&&hay.indexOf(q)<0)return;n++;
-   o+='<div class="rec" style="box-shadow:none;border:1px solid #eef2f7;cursor:pointer" data-cp="'+encodeURIComponent(c.en)+'"><div class="rl">'+E(c.zh||'')+'</div><div style="font-weight:600">'+E(c.en)+'</div>'+(c.ex?'<div class="mini" style="margin-top:3px">'+E(c.ex)+'</div>':'')+'</div>';});
+   o+='<div class="rec" style="box-shadow:none;border:1px solid #eef2f7;cursor:pointer" data-cp="'+encodeURIComponent(c.en)+'"><div class="rl">'+E(c.zh||'')+'</div><div style="display:flex;gap:8px;align-items:center;justify-content:space-between"><div style="font-weight:600">'+E(c.en)+'</div>'+sayBtn(c.en)+'</div>'+(c.ex?'<div class="mini" style="margin-top:3px">'+E(c.ex)+'</div>':'')+'</div>';});
   return n?o:'<div class="mini">没找到，换个词试试。</div>';
  }
  const cb=document.getElementById('clBox');
  function paintCl(){cb.innerHTML=cl(document.getElementById('q').value);
-  cb.querySelectorAll('[data-cp]').forEach(function(e){e.onclick=function(){cp(decodeURIComponent(e.dataset.cp));};});}
+  cb.querySelectorAll('[data-cp]').forEach(function(e){e.onclick=function(ev){if(ev.target.classList.contains('spk'))return;cp(decodeURIComponent(e.dataset.cp));};});}
  paintCl();
  document.getElementById('q').oninput=paintCl;
 }
